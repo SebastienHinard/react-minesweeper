@@ -4,10 +4,11 @@ import Cell from './Cell'
 const Game = () => {
     const [size, setSize] = useState(8)
     const [mines, setMines] = useState(8)
-    const [boardParams, setBoardParams] = useState({size, size, mines})
+    const [boardParams, setBoardParams] = useState({size, mines})
     const [boardData, setBoardData] = useState([])
     const [gameOver, setGameOver] = useState(false)
     const [gameWin, setGameWin] = useState(false)
+    const [timer, setTimer] = useState(0)
 
     // Init board
     const initBoard = (e) => {
@@ -16,6 +17,7 @@ const Game = () => {
         setGameOver(false)
         setGameWin(false)
         setBoardParams({size, mines})
+        setTimer(0)
 
         // Create empty board
         let newBoardData = []
@@ -100,6 +102,7 @@ const Game = () => {
 
             // Calculate remaining
             const unrevealedCells = newBoardData.map(arr => arr.filter(cell => !cell.isRevealed).length).reduce((a,b) => a + b)
+
             if (unrevealedCells === boardParams.mines) {
                 setGameWin(true)
             }
@@ -111,21 +114,33 @@ const Game = () => {
 
     useEffect(initBoard, [])
 
-    return <>
+    useEffect(() => {
+        if (gameOver || gameWin ) return
+        let timeout = setTimeout(() => setTimer(timer + 1), 1000)
+        return () => clearTimeout(timeout)
+    })
+
+    return (
+    <div className={`${gameOver ? 'gameOver' : ''}${gameWin ? 'gameWin' : ''}`}>
+        <h1 className="game-title"><span>💣</span>ReactMines</h1>
         <div className="game-container">
             {/* DIFFICULTY */}
             <div className="game-params">
                 <form onSubmit={initBoard}>
                     <div>
                         <label htmlFor="size">size</label>
-                        <input type="number" name="size" id="size" value={size} onChange={e => setSize(e.target.value)} min={1} max={16}/>
+                        <input type="number" name="size" id="size" value={size} onChange={e => setSize(parseInt(e.target.value))} min={1} max={16}/>
                     </div>
                     <div>
                         <label htmlFor="mines">mines</label>
-                        <input type="number" name="mines" id="mines" value={mines} onChange={e => setMines(e.target.value)} min={1} max={size * size}/>
+                        <input type="number" name="mines" id="mines" value={mines} onChange={e => setMines(parseInt(e.target.value))} min={1} max={size * size}/>
                     </div>
                     <button type="submit">reset</button>
                 </form>
+                <div className="game-score">
+                    <span>Time :</span>
+                    <span>{timer}</span>
+                </div>
             </div>
             {/* BOARD */}
             <div className={`game-grid ${(gameOver || gameWin) && 'noTouch'}`} style={{display: 'grid',gridTemplateColumns: `repeat(${boardParams.size}, 1fr)`}}>
@@ -148,7 +163,8 @@ const Game = () => {
                 </div>
             )}
         </div>
-    </>
+    </div>
+    )
 }
 
 export default Game
